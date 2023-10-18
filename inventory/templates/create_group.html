@@ -1,0 +1,503 @@
+{% extends './rec_base.html' %} {% load static %} {%load django_tables2%}
+{%load render_table from django_tables2%} {%block title %} Create departments{%endblock %}
+{% block head %} {% endblock %} {%block body %}
+<script>
+  var current_page_data = null;
+  var Item_data = null;
+  var num_pages = null;
+  var current_page_number = 1;
+  $.ajax({
+    type: "GET",
+    url: "{% url 'create-departments-fetch'%}",
+    success: function (json) {
+      update_table(json);
+      current_page_data = json;
+      if(json.count % 6 == 0){
+        num_pages =  Math.floor(json.count/6);
+      }else{
+        num_pages =  Math.floor(json.count/6) + 1;
+      }
+      console.log(json);
+      create_pagination_buttons(num_pages);
+
+    },
+    error: function (xhr, errmsg, err) {
+        swal({
+          title: "Failed",
+          text: "Could not load department list, Please Try again",
+          icon: "error",
+        });
+    },
+  });
+
+  $.ajax({
+    type: "GET",
+    url: "{% url 'get-Item-data' %}",
+    success: function (json) {
+      var Item_data = json.data;
+      var Item_select = document.getElementById("Item_static_id");
+      for (var i = 0; i < Item_data.length; i++) {
+        Item_select.innerHTML += `<option value="${Item_data[i][0]}">
+          <p>${Item_data[i][1]} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</p>
+          <p>Available :</p>
+          <div>${Item_data[i][2]}</div>
+        </option>`;
+      }
+    },
+    error: function (xhr, errmsg, err) {
+        swal({
+          title: "Failed",
+          text: "Could not load Item list, Please try again",
+          icon: "error",
+        });
+    },
+  });
+
+  function create_pagination_buttons(num_pages){
+    document.getElementById("numbered_buttons").innerHTML = null;
+    lower_page = current_page_number-3 <= 0 ? 1 : current_page_number-3;
+    upper_page = current_page_number + 3 <= num_pages ? current_page_number + 3 : num_pages;
+    if(current_page_number > 4){
+      document.getElementById("numbered_buttons").innerHTML += `<button class = 'btn btn-outline-primary'>...</button>`;
+    }
+    for(var i = lower_page ; i <= upper_page ;i++){
+      if(i == current_page_number){
+        document.getElementById("numbered_buttons").innerHTML += `<button id = '?page=${i}' onClick = "go_to_page(this.id)" class = 'btn btn-outline-primary active'>${i}</button>`;
+      }else{
+        document.getElementById("numbered_buttons").innerHTML += `<button id = '?page=${i}' onClick = "go_to_page(this.id)" class = 'btn btn-outline-primary'>${i}</button>`;
+      }
+    }
+    if(current_page_number < num_pages-3){
+      document.getElementById("numbered_buttons").innerHTML += `<button class = 'btn btn-outline-primary'>...</button>`;
+    }
+  }
+
+  function update_table(json) {
+    clear_table();
+    table_body = document.getElementById("main-table-body");
+    for (var i = 0; i < json.results.length; i++) {
+      sports_str = "";
+      for (var j = 0; j < json.results[i].sports.length; j++) {
+        sports_str += json.results[i].sports[j].name + "\n";
+      }
+      if (current_departmented_members.indexOf(json.results[i].static_id) < 0) {
+        new_row = `<tr data-id = '${json.results[i].static_id}_in_table'><td>${json.results[i].profile.name}</td>
+        <td>${json.results[i].profile.email}</td>
+        <td>${json.results[i].profile.college.name}</td>
+        <td>${sports_str}</td>
+        <td><input type = "checkbox" class = "department_member_checkboxes" value = ${json.results[i].static_id}></td>
+        `;
+        table_body.innerHTML += new_row;
+      } else {
+        new_row = `<tr data-id = '${json.results[i].static_id}_in_table' style = "display : none"><td>${json.results[i].profile.name}</td>
+        <td>${json.results[i].profile.email}</td>
+        <td>${json.results[i].profile.college.name}</td>
+        <td>${sports_str}</td>
+        <td><input type = "checkbox" class = "department_member_checkboxes" value = ${json.results[i].static_id}></td>
+        `;
+        table_body.innerHTML += new_row;
+      }
+    }
+    create_pagination_buttons(num_pages);
+  }
+
+  function clear_table() {
+    table_body = document.getElementById("main-table-body");
+    table_body.innerHTML = null;
+  }
+</script>
+<!-- <div style="position: relative; top: 4vh; left: 20vw; width: 75vw"> -->
+  <div class="container" style="position : absolute; width: 80%; left : 20%; top : 10%">
+    <div class="row">
+      <div
+      id="department-members"
+      class="col-7"
+      style="padding: 0px;"
+      >
+      <h3 style="text-align: center;">Select Members</h3>
+      <br>
+      <div style="display: flex; flex-direction: row">
+        <input
+            type="textarea"
+            class="form-control"
+            id="search_query"
+            placeholder="Search by name, email or college"
+          />
+          <button
+            style="margin-left: 5px"
+            class="btn btn-dark"
+            style="width: fit-content"
+            id="filter_button"
+          >
+          <i class="fas fa-filter"></i>
+          </button>
+          <button
+            style="margin-left: 3px"
+            class="btn btn-danger"
+            style="width: fit-content"
+            id="filter_clear"
+          >
+            Clear
+          </button>
+        </div>
+        <div style = "width: 100%; overflow-x: auto; overflow-y: auto; max-height: 70%; margin-top: 3%;">
+        <table class="table table-responsive">
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Email</th>
+              <th scope="col">College</th>
+              <th scope="col">Sports</th>
+              <th scope="col">Select</th>
+            </tr>
+          </thead>
+          <tbody id="main-table-body"></tbody>
+        </table>
+      </div>
+        <div style="margin: auto; width: max-content; margin-top: 20px; flex-direction: row; display: flex; max-width: 100%;">
+          <button id="prev-page" class="btn btn-outline-primary"  style = "height : 10%">prev</button>
+          <div id = "numbered_buttons" style = "flex-direction: row;  display: flex; flex-wrap : wrap; max-width: 100%; justify-content: center; align-items: flex-end;">
+          </div>
+          <button id="next-page" class="btn btn-outline-primary" style = "height : 10%">next</button>
+        </div>
+      </div>
+        <div class = "col-1" style = "display: flex; align-items: center; justify-content: center; width:5%;">
+          <div style=" position : relative ; border-left:1px solid #000; height:100%; left: 50%;"></div>
+          <div style = "z-index: 1;">
+          <button
+            id="move-right"
+            class="btn btn-dark"
+          >
+          <i class="fas fa-arrow-right"></i>
+          </button>
+          <button
+            id="move-left"
+            class="btn btn-dark"
+          >
+          <i class="fas fa-arrow-left"></i>
+          </button>
+        </div>
+        </div>
+      <div class="col-4" style = "display: flex; flex-direction: column; justify-content: center;">
+          <h4 style="text-align: center">Select Item</h4>
+          <form action="">
+            <select class="form-select" id="Item_static_id"></select>
+          </form>
+          <div
+            id="departmented-Members"
+            style="
+              margin-top: 20%;
+              overflow: scroll;
+              height: 400px;
+              width: 100%;
+            "
+          >
+            <h5 style="text-align: center">Members in department</h5>
+            <div style="text-align: center"><em>-Click on Member to Set Leader</em></div>
+            <table id="departmented_table" class="table table-dark">
+              <thead>
+                <tr>
+                  <th scope="col">Name</th>
+                  <th scope="col">Email</th>
+                  <th scope="col">College</th>
+                  <th scope="col">Remove</th>
+                </tr>
+              </thead>
+              <tbody id="departmented_table_body"></tbody>
+            </table>
+          </div>
+          <button
+            id="create_department_btn"
+            class="btn btn-success"
+            type="button"
+          >
+            Create department
+          </button>
+      </div>
+    </div>
+    <div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Change Leader</h5>
+          </div>
+          <div class="modal-body">
+            Change department Leader
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">No</button>
+            <button type="button" id = "confirm_department_leader" class="btn btn-success" data-bs-dismiss="modal">Yes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+  temp__department_leader = '';
+  department_leader = '';
+  $('#exampleModalCenter').on('hidden.bs.modal', function () {
+    temp__department_leader = '';
+  });
+// do something… })
+  change_leader_confirm = document.getElementById("confirm_department_leader");
+  change_leader_confirm.addEventListener("click", ()=>{
+    make_department_leader();
+  });
+  function make_department_leader(){
+    if(department_leader) {
+      document.querySelector(`div[id = 'icon_${department_leader}'`).remove();
+      document.querySelector(`tr[id = 'selected_${temp__department_leader}'`).firstChild.innerHTML = `<div id = "icon_${temp__department_leader}" style = "display:flex; justify-content : center ; align-items : center "><i class='fa fa-solid fa-crown' style = 'color : #FFD700'></i></div>` + document.querySelector(`tr[id = 'selected_${temp__department_leader}'`).firstChild.innerHTML;
+      department_leader = temp__department_leader;
+    }else{
+      document.querySelector(`tr[id = 'selected_${temp__department_leader}'`).firstChild.innerHTML = `<div id = "icon_${temp__department_leader}" style = "display:flex; justify-content : center ; align-items : center "><i class='fa fa-solid fa-crown' style = 'color : #FFD700'></i></div>` + document.querySelector(`tr[id = 'selected_${temp__department_leader}'`).firstChild.innerHTML;
+      department_leader = temp__department_leader;
+    }
+    temp__department_leader = '';
+  }
+  function temp_leader_confirm(id,name){
+    temp__department_leader = id;
+    if(department_leader != id){
+      document.querySelector("div[class = 'modal-body'").innerHTML = `Change department leader to <strong>${name}</strong> ?`;
+      $('#exampleModalCenter').modal('show');
+    }
+  }
+  next_page_button = document.getElementById("next-page");
+  prev_page_button = document.getElementById("prev-page");
+  next_page_button.addEventListener("click", () => {
+    if (current_page_data.next) {
+      $.ajax({
+        type: "GET",
+        url: current_page_data.next,
+        success: function (json) {
+          table_body = document.getElementById("main-table-body");
+          current_page_number +=1;
+          update_table(json);
+          current_page_data = json;
+        },
+        error: function (xhr, errmsg, err) {
+        swal({
+          title: "Failed",
+          text: "An Error occured, try refreshing the page",
+          icon: "error",
+        });
+        },
+      });
+    } else {
+      swal({
+          title: "OOPS..",
+          text: "Last Page",
+          icon: "info",
+        });
+    }
+  });
+
+  prev_page_button.addEventListener("click", () => {
+    if (current_page_data.previous) {
+      $.ajax({
+        type: "GET",
+        url: current_page_data.previous,
+        success: function (json) {
+          table_body = document.getElementById("main-table-body");
+          current_page_number -= 1;
+          update_table(json);
+          current_page_data = json;
+        },
+        error: function (xhr, errmsg, err) {
+          swal({
+          title: "Failed",
+          text: "An Error occured, try refreshing the page",
+          icon: "error",
+        });
+        },
+      });
+    } else {
+      swal({
+          title: "OOPS..",
+          text: "First Page",
+          icon: "info",
+        });
+    }
+  });
+  current_departmented_members = [];
+  var shift_right_button = document.getElementById("move-right");
+  var shift_left_button = document.getElementById("move-left");
+  shift_right_button.addEventListener("click", function () {
+    currently_selected_department_members = [];
+    all_checkboxes = document.getElementsByClassName("department_member_checkboxes");
+    departmented_table = document.getElementById("departmented_table_body");
+    for (var i = 0; i < all_checkboxes.length; i++) {
+      if (all_checkboxes[i].checked) {
+        current_departmented_members.indexOf(all_checkboxes[i].value) === -1
+          ? current_departmented_members.push(all_checkboxes[i].value)
+          : null;
+        currently_selected_department_members.push(all_checkboxes[i].value);
+        member = document.querySelector(
+          `tr[data-id = '${all_checkboxes[i].value}_in_table'`
+        );
+        tds = member.querySelectorAll("td");
+        member_details = [];
+        for (var j = 0; j < 3; j++) {
+          member_details.push(tds[j].textContent);
+        }
+        departmented_table.innerHTML += `<tr id = "selected_${all_checkboxes[i].value}"><td onClick = "temp_leader_confirm('${all_checkboxes[i].value}', '${member_details[0]}')">${member_details[0]}</td><td onClick = "temp_leader_confirm('${all_checkboxes[i].value}', '${member_details[0]}')">${member_details[1]}</td><td onClick = "temp_leader_confirm('${all_checkboxes[i].value}', '${member_details[0]}')">${member_details[2]}</td><td><input type = "checkbox" class = "selected_members" value = "${all_checkboxes[i].value}"></input></td></tr>`;
+      }
+    }
+    // Hiding members from main table --> delete once the submit info button is pressed
+    for (var k = 0; k < currently_selected_department_members.length; k++) {
+      member = document.querySelector(
+        `tr[data-id = '${currently_selected_department_members[k]}_in_table'`
+      );
+      box = member
+        .querySelectorAll("td")[4]
+        .querySelector("input[type = 'checkbox']");
+      box.checked = false;
+      member.style.display = "None";
+    }
+  });
+
+  shift_left_button.addEventListener("click", function () {
+    if(current_departmented_members.indexOf(department_leader) >= 0) {
+      department_leader = '';
+    }
+    all_selected_members_checkboxes =
+      document.getElementsByClassName("selected_members");
+    for (var i = 0; i < all_selected_members_checkboxes.length; i++) {
+      if (all_selected_members_checkboxes[i].checked) {
+        member = document.querySelector(
+          `tr[data-id = '${all_selected_members_checkboxes[i].value}_in_table'`
+        );
+        if (member) {
+          member.style.display = null;
+        }
+      }
+    }
+    for (var j = all_selected_members_checkboxes.length - 1; j >= 0; j--) {
+      if (all_selected_members_checkboxes[j].checked) {
+        current_departmented_members = current_departmented_members.filter(
+          (item) => item !== all_selected_members_checkboxes[j].value
+        );
+        document
+          .querySelector(
+            `tr[id = 'selected_${all_selected_members_checkboxes[j].value}'`
+          )
+          .remove();
+      }
+    }
+  });
+
+  var create_department = document.getElementById("create_department_btn");
+  create_department.addEventListener("click", get_ids);
+
+  function get_ids() {
+    var Item_id = document.getElementById("Item_static_id").value;
+    if(department_leader){
+      $.ajax({
+      type: "POST",
+      datatype: "multipart/json,charset=utf-8",
+      traditional: true,
+      url: "{% url 'create-departments-post'%}",
+      data: {
+        member_ids: current_departmented_members,
+        Item_id: Item_id,
+        department_leader : department_leader,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+      },
+      success: function (json) {
+        for(var k = 0; k < current_departmented_members.length ; k++){
+          document.querySelector(`tr[id = 'selected_${current_departmented_members[k]}'`).remove();
+          member_row = document.querySelector( `tr[data-id = '${current_departmented_members[k]}_in_table'`)
+          if(member_row){
+            member_row.remove()
+          }
+        }
+        selected_option = document.getElementById("Item_static_id").querySelector(`option[value = '${Item_id}'`).innerHTML;
+        split_str = selected_option.split(":");
+        console.log(split_str);
+        current_availability =  parseInt(split_str[split_str.length - 1]);
+        new_availability = current_availability - current_departmented_members.length;
+        split_str[split_str.length-1] = ": " + new_availability
+        document.getElementById("Item_static_id").querySelector(`option[value = '${Item_id}'`).innerHTML = split_str.join("");
+        current_departmented_members = [];
+        department_leader = '';
+        swal({
+          title: "Success",
+          text: json.message,
+          icon: "success",
+        })
+      },
+      error: function (xhr, errmsg, err) {
+        var jsondata=JSON.parse(xhr.responseText);
+        swal({
+          title: "Failed",
+          text: jsondata.message,
+          icon: "error",
+        });
+      },
+    });
+    }else{
+      swal({
+          title: "Wait!",
+          text: "You haven't assigned this department a leader.",
+          icon: "error",
+        });
+    }
+  }
+
+  var filter_button = document.getElementById("filter_button");
+  filter_button.addEventListener("click", filter_data);
+
+  function filter_data() {
+    searched_query = document.getElementById("search_query").value;
+    $.ajax({
+      type: "GET",
+      url: `http://127.0.0.1:8000/departments/SU/create-departments-fetch/?search=${searched_query}`,
+      success: function (json) {
+        table_body = document.getElementById("main-table-body");
+        update_table(json);
+        current_page_data = json;
+      },
+      error: function (xhr, errmsg, err) {
+      },
+    });
+  }
+  filter_button = document.getElementById("filter_clear");
+  filter_button.addEventListener("click", () => {
+      document.getElementById("search_query").value = null;
+      $.ajax({
+      type: "GET",
+      url: "{% url 'create-departments-fetch'%}",
+      success: function (json) {
+        update_table(json);
+        current_page_data = json;
+        current_page_number = 1;
+        create_pagination_buttons(num_pages)
+      },
+      error: function (xhr, errmsg, err) {
+      },
+    });
+    });
+
+  function go_to_page(page_url_extra){
+    $.ajax({
+        type: "GET",
+        url: "http://127.0.0.1:8000/departments/SU/create-departments-fetch/"+page_url_extra,
+        success: function (json) {
+          console.log("JSON", json);
+          table_body = document.getElementById("main-table-body");
+          current_page_number = parseInt(page_url_extra.split("=")[page_url_extra.split("=").length-1])
+          update_table(json);
+          current_page_data = json;
+        },
+        error: function (xhr, errmsg, err) {
+          swal({
+          title: "Failed",
+          text: "An Error occured, try refreshing the page",
+          icon: "error",
+        });
+        },
+      });
+  }
+</script>
+{%endblock%}

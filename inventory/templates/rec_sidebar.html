@@ -1,0 +1,45 @@
+{% load static %}
+<div class="sidebar">
+  <!--
+          change the color of the sidebar using: data-color="blue | green | orange | red"
+        -->
+  <div class="sidebar-wrapper">
+    <div>
+      <div class="logo">
+        <a href="javascript:void(0)" class="simple-text logo-normal">
+          Firewallz
+        </a>
+      </div>
+      <div>
+        <ul class="nav">
+          {#% include 'firewallz-sidebar-item.html' with title='All Members'
+          url='all-members' icon='icon-badge' %#} {% include
+          'firewallz-sidebar-item.html' with title='Dashboard'
+          url='firewallz-dashboard' icon='icon-bank' %} {% include
+          'firewallz-sidebar-item.html' with title='All Members'
+          url='all-members-firewallz' icon='icon-badge' %} {% include
+          'firewallz-sidebar-item.html' with title='Unapproved Members'
+          url='unapproved-members-firewallz' icon='icon-chat-33' %} {% include
+          'firewallz-sidebar-item.html' with title='Approved Members'
+          url='approved-members-firewallz' icon='icon-chat-33' %} {% include
+          'firewallz-sidebar-item.html' with title='College List'
+          url='college-list-firewallz' icon='icon-single-02' %} {% include
+          'firewallz-sidebar-item.html' with title='Team List'
+          url='team-list-firewallz' icon='icon-bullet-list-67' %} {% include
+          'firewallz-sidebar-item.html' with title='Add Participants'
+          url='add-participant' icon='icon-chat-33' %} {% include
+          'firewallz-sidebar-item.html' with title='department List'
+          url='department-list-firewallz' icon='icon-book-bookmark' %} {%
+          include 'firewallz-sidebar-item.html' with title='Create department'
+          url='create-department-firewallz' icon='icon-tap-02' %}
+        </ul>
+      </div>
+    </div>
+    <div>
+      <label class="switch theme-switch">
+        <input type="checkbox" class="bsc" checked="" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+</div>

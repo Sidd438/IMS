@@ -1,0 +1,69 @@
+{% load static %}
+
+<style>
+  .main-panel {
+    border-top: 2px solid #35d340;
+  }
+
+  .sidebar,
+  .off-canvas-sidebar {
+    background: linear-gradient(0deg, #29d2b4 0%, #35d340 100%);
+  }
+
+  a {
+    color: #35d340;
+  }
+
+  a:hover {
+    color: #299f30;
+  }
+
+  .page-item.active .page-link {
+    background-color: #35d340;
+    border-color: #35d340;
+  }
+
+  .bg-danger {
+    background-color: #35d340 !important;
+  }
+
+  .btn-link:hover {
+    color: #299f30;
+  }
+</style>
+
+<div class="sidebar">
+  <!--
+          change the color of the sidebar using: data-color="blue | green | orange | red"
+        -->
+  <div class="sidebar-wrapper">
+    <div>
+      <div class="logo">
+        <a href="javascript:void(0)" class="simple-text logo-normal"> SU </a>
+      </div>
+      <div>
+        <ul class="nav">
+          {% include 'firewallz-sidebar-item.html' with title='Dashboard'
+          url='SU-dashboard' icon='icon-bank' %} {% include
+          'firewallz-sidebar-item.html' with title='All Members'
+          url='all-members-rec' icon='icon-badge' %} {% include
+          'firewallz-sidebar-item.html' with title='All Items' url='Item-list'
+          icon='icon-chat-33' %} {% include 'firewallz-sidebar-item.html' with
+          title='Add Item' url='create-Item' icon='icon-chat-33' %} {% include
+          'firewallz-sidebar-item.html' with title='Allocated Members'
+          url='allocated-members' icon='icon-single-02' %} {% include
+          'firewallz-sidebar-item.html' with title='All departments'
+          url='department-list' icon='icon-bullet-list-67' %} {% include
+          'firewallz-sidebar-item.html' with title='Allocate Items'
+          url='allocate-Items' icon='icon-chat-33' %}
+        </ul>
+      </div>
+    </div>
+    <div>
+      <label class="switch theme-switch">
+        <input type="checkbox" class="bsc" checked="" />
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+</div>

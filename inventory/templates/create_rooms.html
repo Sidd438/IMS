@@ -1,0 +1,163 @@
+{% extends './rec_base.html' %} {% load static %} {%load crispy_forms_tags%}
+{%block title %} Create Item {% endblock%} {% block body %}
+<div style="position: relative; top: 4vh; left: 20vw; width: 75vw">
+  <h1 style="text-align: center">Create New Item</h1>
+  <div
+    class="col-8 card"
+    style="
+      padding: 15px;
+      box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px,
+        rgba(0, 0, 0, 0.23) 0px 3px 6px;
+      transform: translate(0, 50%);
+      margin: auto;
+      border-radius: 30px;
+    "
+  >
+    <div class="card-body">
+      <h3 style="text-align: center">New Item Details</h3>
+      <form method="POST">
+        {% csrf_token %} {%for field in form%}
+        <div><strong>{{field.label}}</strong></div>
+        <div style="margin-bottom: 10px">{{field}}</div>
+        {%endfor%}
+        <div style="display: flex; justify-content: space-evenly; ">
+        <button
+          type="submit"
+          value="Save"
+          class="btn btn-outline-warning"
+          id="save_Item"
+        >
+          Create
+        </button>
+      <button
+      id="reload"
+      class="btn btn-outline-warning" type="reset" value="Reset">
+      <i class="fas fa-redo">
+      </i>
+      </button>
+      <button
+      id="fetch"
+        class="btn btn-outline-warning">Fetch
+        </button>
+      </div>
+      </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+
+  // var input = document.getElementById("id_name");
+  //  input.addEventListener("keydown", function (e) {
+  //   if (e.key === "Enter") {
+  //     getId(event);
+  //   }
+  // });
+  document.getElementById("reload").addEventListener("click",enablenameinput=()=>{
+    document.getElementById("id_name").disabled = false;
+    document.getElementById("fetch").innerHTML = "Fetch";
+    document.getElementById("save_Item").hidden = "";
+  })
+
+  function getId(event){
+    event.preventDefault();
+    var name = document.getElementById("id_name").value;
+    var total_capacity = document.getElementById("id_total_capacity").value;
+    var fetch = true;
+    if(document.getElementById("fetch").innerHTML == "Update"){
+      fetch = false
+    }
+    if (!total_capacity){
+      total_capacity = null;
+    }
+    $.ajax({
+      type: "POST",
+      url: "{% url 'get-Item-detail' %}",
+      datatype: "multipart/json",
+      traditional: true,
+      data: {
+        name: name,
+        total_capacity: total_capacity,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+        fetch: fetch
+      },
+      success: function (json) {
+        document.getElementById("id_name").disabled = true;
+        document.getElementById("fetch").innerHTML = "Update"
+        document.getElementById("id_name").value = json.data.name;
+        document.getElementById("id_total_capacity").value = json.data.total_capacity;
+        document.getElementById('save_Item').hidden = "hidden";
+        if (json.data.saved){
+          window.location.reload();
+        }
+      },
+
+      error: function (xhr, errmsg, err) {
+        var jsondata=JSON.parse(xhr.responseText);
+        swal({
+          title: "Failed",
+          text: jsondata.message,
+          icon: "error",
+        });
+      },
+    });
+  }
+  var submit_button = document.getElementById("fetch");
+  submit_button.addEventListener("click", getId);
+  function get_id(event) {
+    event.preventDefault();
+    var aspace = document.getElementById("id_total_capacity").value;
+    var rname = document.getElementById("id_name").value;
+    const Itemlist = "{{Itemlist}}".split(",");
+    if (Itemlist.includes(rname)) {
+      swal({
+        title: "Item with the same Name already exists",
+        text: "This Name is already in use",
+        icon: "warning",
+      });
+      return;
+    }
+    if (aspace <= 0) {
+      swal({
+        title: "Invalid total capacity",
+        text: "Total Capacity should be greater than 0",
+        icon: "warning",
+      });
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      url: "{% url 'create-Items' %}",
+      datatype: "multipart/json",
+      traditional: true,
+      data: {
+        name: rname,
+        total_capacity: aspace,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+      },
+
+      success: function (json) {
+        document.getElementById("id_name").value = "";
+        document.getElementById("id_total_capacity").value = 0;
+        swal({
+          title: "Success",
+          text: "Item Created",
+          icon: "success",
+        });
+      },
+
+      error: function (xhr, errmsg, err) {
+        swal({
+          title: "Failed",
+          text: "Could not create Item, try again",
+          icon: "error",
+        });
+      },
+    });
+  }
+  var submit_button = document.getElementById("save_Item");
+  submit_button.addEventListener("click", get_id);
+</script>
+{%endblock%}

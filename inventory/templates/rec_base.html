@@ -1,0 +1,87 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" style = "height: 100%;">
+
+<head>
+  <title>{% block title %} {% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  {% include 'scripts.html' %}
+  {% block head %}
+  {% endblock%}
+</head>
+<body class = "overflow-hidden" style = "height: 100%;">
+  <div class="pcr-sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
+    style="position : absolute; width: 15%; height: 100%; top: 0; left: 0;">
+    <a class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+      <span class="fs-4">SU</span>
+    </a>
+    <hr>
+<ul class="nav nav-pills flex-column mb-auto">
+  <li style="width : 100%">
+    <a href="{% url 'SU-dashboard' %}" {% if request.resolver_match.url_name == 'SU-dashboard' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+      <strong style="font-size: 100%;">Dashboard</strong>
+    </a>
+  </li>
+  <hr>
+  <li style="width : 100%">
+    <a href="{% url 'Item-list'%}" {% if request.resolver_match.url_name == 'Item-list' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+      <strong style="font-size: 100%;">All Items</strong>
+  </a>
+</li>
+<hr>
+<li style="width : 100%">
+  <a href="{% url 'create-Items'%}" {% if request.resolver_match.url_name == 'create-Items' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Add Items</strong>
+</a>
+</li>
+<hr>
+<li style="width : 100%">
+  <a href="{% url 'departmentmembers'%}" {% if request.resolver_match.url_name == 'departmentmembers' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Alloted Members</strong>
+  </a>
+</li>
+<hr>
+<li style="width : 100%">
+  <a href="{% url 'department-list'%}" {% if request.resolver_match.url_name == 'department-list' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">All departments</strong>
+  </a>
+</li>
+<hr>
+     <li style="width : 100%">
+    <a href="{% url 'department-list' %}" {% if request.resolver_match.url_name == 'create-departments' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+      <strong style="font-size: 100%;">Allocate Items</strong>
+  </a>
+</li>
+    <hr>
+
+<li style="width : 100%">
+  <a href="{% url 'inventory'%}" {% if request.resolver_match.url_name == 'inventory' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Inventory</strong>
+</a>
+</li>
+
+<hr>
+<li style="width : 100%">
+  <a href="{% url 'create-inventory'%}" {% if request.resolver_match.url_name == 'create-inventory' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Add/Update Item</strong>
+</a>
+</li>
+<hr>
+</ul>
+<hr>
+      <a href="{% url 'logout'%}" class="nav-link text-white align-items-center text-decoration-none bg-dark">
+        <i class="fas fa-sign-out-alt"></i>
+        <strong >Logout</strong>
+    </a>
+  </div>
+  {% block body %}
+  {% endblock %}
+</body>
+<script>
+  const HOST_URL = "https://alpha.inter-bits.org/"
+</script>
+
+</html>

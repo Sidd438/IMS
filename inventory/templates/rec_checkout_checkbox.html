@@ -1,0 +1,5 @@
+{% if record.status == "Checked-in" %}
+    <input id="checkout-{{record.static_id}}" class="checkout-checkbox" type="checkbox"/>
+{% else %}
+    <i class="fas fa-check"></i>
+{% endif %}

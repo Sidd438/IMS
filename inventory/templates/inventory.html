@@ -1,0 +1,47 @@
+{% extends './rec_base.html' %} {%load django_tables2%} {% load static %} {%load
+render_table from django_tables2 %} {% block title %} Inventory {% endblock %}
+{% block head %} {% endblock %} {% block body %}
+<div style="position: relative; top: 4vh; left: 20vw; width: 75vw">
+  <h2 style="text-align: center; margin-bottom: 20px">Inventory</h2>
+  <form style="display: flex; justify-content: space-evenly; align-items: end">
+    {% for field in filter.form%}
+    <div class="filter_inputs" style="margin: 5px">
+      <label>{{field.label}}</label>{{field}}
+    </div>
+    {%endfor%}
+    <div style="margin: 5px; display: flex; flex-direction: row; justify-content: space-evenly;">
+      <button
+        style="margin-left: 5px"
+        class="btn btn-dark"
+        style="width: fit-content; height: 10%"
+      >
+        <i class="fas fa-filter"></i>
+      </button>
+      <button
+        style="margin-left: 5px"
+        class="btn btn-danger"
+        style="width: fit-content; height: 10%"
+        type="button"
+        id="clear_filters"
+      >
+        Clear
+      </button>
+    </div>
+  </form>
+  <div style="max-height: 500px; overflow-y: auto">{%render_table table%}</div>
+  <div id="new_pagination" style="margin-top: 20px"></div>
+</div>
+<script>
+  document
+    .getElementById("new_pagination")
+    .appendChild(document.getElementById("prev_pagination"));
+  clear_filters = document.getElementById("clear_filters");
+  clear_filters.addEventListener("click", () => {
+    filter_inputs = document.querySelectorAll("div[class = 'filter_inputs']");
+    for (var i = 0; i < filter_inputs.length; i++) {
+      filter_inputs[i].querySelector("input").value = null;
+    }
+    window.location = window.location.href.split("?")[0];
+  });
+</script>
+{%endblock%}

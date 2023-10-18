@@ -1,0 +1,482 @@
+<script>
+  let department_list = new Map();
+  let Item_list = new Map();
+  let total_selected_members = 0;
+  let department_filter = [];
+
+  let current_page = 0;
+
+  const NUM_departmentS_PER_PAGE = 2;
+
+  function adddepartment(departmentId, departmentName, pageNo) {
+    department_list.set(departmentId, {
+      name: departmentName,
+      id: departmentId,
+      data: [],
+    });
+  }
+
+  function addMember(departmentName, static_id, name, email, college) {
+    department_list.get(departmentName)["data"].push({
+      static_id: static_id,
+      name: name,
+      email: email,
+      college: college,
+      selected: false,
+      selectable_check: false,
+      selected_check: false,
+    });
+  }
+
+  function getdepartmentSelectedMembers(departmentId, prop) {
+    let selected = 0;
+    for (let student of department_list.get(departmentId).data) {
+      if (student[prop]) selected++;
+    }
+    return selected;
+  }
+
+  function getdepartmentTotalMembers(departmentId) {
+    return department_list.get(departmentId).data.length;
+  }
+
+  function adddepartmentDisplay(id, name, selectable) {
+    let classType = selectable ? "selectable" : "selected";
+    let checkbox_title = selectable ? "Add" : "Remove";
+    let html = `
+	 <div class="department-caraosel ${classType}-department" id="${classType}-department-${id}">
+	     <a class="${classType}-department-header d-flex"
+		data-toggle="collapse"
+		data-target="#department-items-${classType}-${id}"
+		aria-expanded="true"
+		aria-controls="department-items-${classType}-${id}"
+		id="department-${id}">
+		 <div>
+		     <button class="btn-link">
+			 ${name}
+		     </button>
+		     <div class="d-inline"
+			  id="department-${classType}-${id}-counter">(0/0)</div>
+		 </div>
+		 <div class="ml-auto my-auto">
+		     <input id="${classType}-${id}-checkbox" type="checkbox">
+		 </div>
+	     </a>
+
+	     <div id="department-items-${classType}-${id}" class="collapse" aria-labelledby="department-${id}" data-parent="#${classType}-departments">
+		 <div class="card-body ${classType}-department-header">
+		     <div class="table-responsive">
+			 <table class="table">
+			     <thead>
+				 <th>${checkbox_title}</th>
+				 <th>Name</th>
+				 <th>Email</th>
+				 <th>College</th>
+			     </thead>
+			     <tbody>
+			     </tbody>
+			 </table>
+		     </div>
+		 </div>
+	     </div>
+	 </div>
+     `;
+    let elem = $(html);
+    $(`#${classType}-departments`).append(elem);
+    $(`#${classType}-${id}-checkbox`).click(function () {
+      event.stopPropagation();
+      for (let student of department_list.get(id).data) {
+        if (
+          (!student["selected"] && classType == "selectable") ||
+          (student["selected"] && classType == "selected")
+        )
+          student[`${classType}_check`] = this.checked;
+      }
+      updateCheckboxes(id);
+      updatedepartmentCounters(id);
+    });
+  }
+
+  function updatedepartmentCounters(departmentId) {
+    let all_total = getdepartmentTotalMembers(departmentId);
+    let selected = getdepartmentSelectedMembers(departmentId, "selected");
+    for (let classType of ["selected", "selectable"]) {
+      let total = classType == "selected" ? selected : all_total - selected;
+      let checked = getdepartmentSelectedMembers(
+        departmentId,
+        `${classType}_check`
+      );
+      $(`#department-${classType}-${departmentId}-counter`).text(
+        `(${checked}/${total})`
+      );
+      $(`#${classType}-${departmentId}-checkbox`).prop(
+        "checked",
+        total == checked
+      );
+    }
+  }
+
+  function updateCheckboxes(departmentId) {
+    for (let student of department_list.get(departmentId).data) {
+      $(
+        `#department-student-selectable-${student.static_id} .student-checkbox`
+      ).prop("checked", student.selectable_check);
+
+      $(
+        `#department-student-selected-${student.static_id} .student-checkbox`
+      ).prop("checked", student.selected_check);
+    }
+  }
+
+  function updatedepartmentShownStatus(departmentId) {
+    let total = getdepartmentTotalMembers(departmentId);
+    let selected = getdepartmentSelectedMembers(departmentId, "selected");
+
+    // Remove from selectable if all members are selected
+    if (total == selected || department_filter.indexOf(departmentId) == -1)
+      $(`#selectable-department-${departmentId}`).addClass("d-none");
+    else $(`#selectable-department-${departmentId}`).removeClass("d-none");
+
+    // Remove from selected if no members are selected
+    if (selected == 0)
+      $(`#selected-department-${departmentId}`).addClass("d-none");
+    else $(`#selected-department-${departmentId}`).removeClass("d-none");
+
+    for (let student of department_list.get(departmentId).data) {
+      if (student.selected) {
+        $(`#department-student-selected-${student.static_id}`).removeClass(
+          "d-none"
+        );
+        $(`#department-student-selectable-${student.static_id}`).addClass(
+          "d-none"
+        );
+      } else {
+        $(`#department-student-selected-${student.static_id}`).addClass(
+          "d-none"
+        );
+        $(`#department-student-selectable-${student.static_id}`).removeClass(
+          "d-none"
+        );
+      }
+    }
+  }
+
+  function adddepartmentStudent(department, student) {
+    for (let classType of ["selected", "selectable"]) {
+      let html = `
+	     <tr id="department-student-${classType}-${student.static_id}">
+		 <td>
+		     <input class="student-checkbox" type="checkbox">
+		 </td>
+		 <td>${student.name}</td>
+		 <td>${student.email}</td>
+		 <td>${student.college}</td>
+	     </tr>
+	 `;
+      let elem = $(html);
+      $(`#department-items-${classType}-${department} table tbody`).append(
+        elem
+      );
+      elem.find("input").change(function () {
+        student[`${classType}_check`] = this.checked;
+        updatedepartmentCounters(department);
+      });
+    }
+  }
+
+  function clearSkeleton() {
+    $("#selectable-departments").html("");
+    $("#selected-departments").html("");
+  }
+
+  function generateSkeleton() {
+    clearSkeleton();
+    for (let [id, department] of department_list) {
+      adddepartmentDisplay(department["id"], department["name"], true);
+      adddepartmentDisplay(department["id"], department["name"], false);
+      for (let student of department["data"]) {
+        adddepartmentStudent(id, student);
+      }
+      updatedepartmentCounters(id);
+      updatedepartmentShownStatus(id);
+    }
+  }
+
+  function moveCheckedStudents(right) {
+    let check = right ? "selectable_check" : "selected_check";
+    for (let [id, department] of department_list) {
+      for (let student of department.data) {
+        if (student[check]) {
+          student.selectable_check = false;
+          student.selected_check = false;
+          student.selected = right;
+        }
+      }
+      updatedepartmentCounters(id);
+      updatedepartmentShownStatus(id);
+      updateCheckboxes(id);
+    }
+
+    updateItemListUI();
+  }
+
+  function countSelectedMembers() {
+    total_selected_members = 0;
+    for (let [id, department] of department_list) {
+      total_selected_members += getdepartmentSelectedMembers(id, "selected");
+    }
+  }
+
+  function updateItemListUI() {
+    let counter_col = "red";
+    let counter_val = "No Item selected!";
+    if ($("#Item-list-select").val() != "") {
+      let Item = Item_list.get($("#Item-list-select").val());
+      countSelectedMembers();
+
+      if (Item.available_space >= total_selected_members) {
+        counter_col = "green";
+      }
+
+      counter_val = `${total_selected_members}/${Item.available_space}`;
+    }
+
+    let counter = $("#Item-counter");
+    counter.text(counter_val);
+    if (counter_col == "green") {
+      counter.removeClass("text-danger");
+      counter.addClass("text-success");
+    } else {
+      counter.addClass("text-danger");
+      counter.removeClass("text-success");
+    }
+  }
+
+  function populateItemList() {
+    $.ajax({
+      type: "GET",
+      url: "{% url 'Items' %}",
+      success: function (json) {
+        for (Item of json) {
+          Item_list.set(Item["static_id"], Item);
+        }
+        for (let [id, Item] of Item_list) {
+          $("#Item-list-select").append(
+            $(
+              `<option value="${Item.static_id}">(${Item.available_space}) - ${Item.name}</option>`
+            )
+          );
+        }
+
+        updateItemListUI();
+      },
+    });
+  }
+
+  function populatedepartments(page, college_search, name_search) {
+    if (page === undefined) page = current_page;
+    if (college_search === undefined)
+      college_search = $("#college_search").val();
+    if (name_search === undefined) name_search = $("#name_search").val();
+
+    let query = `?page=${page + 1}`;
+    if (college_search.length || name_search.length) {
+      query += `&College=${college_search}`;
+      query += `&Name=${name_search}`;
+    }
+    $.ajax({
+      type: "GET",
+      url: `{% url 'rec-departments' %}${query}`,
+      success: function (json) {
+        department_filter = [];
+        for (let department of json["results"]) {
+          department_filter.push(department.static_id);
+
+          if (department_list.has(department.static_id)) continue;
+
+          adddepartment(department.static_id, department.name, current_page);
+          for (let member of department["members"]) {
+            addMember(
+              department.static_id,
+              member.static_id,
+              member.member.profile.name,
+              member.member.profile.email,
+              member.member.profile.college.name
+            );
+          }
+        }
+        populatePagination(json["count"]);
+        generateSkeleton();
+      },
+    });
+  }
+
+  function populatePagination(totalEntries) {
+    let pagination = $(`<ul class="pagination"><ul>`);
+    let num_pages = Math.ceil(totalEntries / NUM_departmentS_PER_PAGE);
+
+    let prev = $(`<li class="previous page-item">
+            <a href="#" class="page-link">prev</a>
+	 </li>`);
+
+    let next = $(`<li class="next page-item">
+            <a href="#" class="page-link">next</a>
+	 </li>`);
+
+    prev.click(function () {
+      if (current_page != 0) current_page = current_page - 1;
+      populatedepartments();
+    });
+
+    next.click(function () {
+      if (current_page != num_pages - 1) current_page = current_page + 1;
+      populatedepartments();
+    });
+
+    if (current_page != 0) pagination.append(prev);
+
+    for (let i = 0; i < num_pages; i++) {
+      let link = $(`<li class="page-item">
+            <a href="#" class="page-link">${i + 1}</a>
+	 </li>`);
+
+      if (i == current_page) link.addClass("active");
+
+      pagination.append(link);
+
+      // IFFE, do not change to non-IFFE, i value is changed at the end.
+      link.click(
+        (function (page) {
+          return function () {
+            current_page = page;
+            populatedepartments();
+          };
+        })(i)
+      );
+
+      // Skip pages
+      if (Math.abs(current_page - i) > 2 && i != 0 && i != num_pages - 1) {
+        if (i < current_page) i = current_page - 3;
+        else i = num_pages - 2;
+
+        pagination.append($(`<li class="page-item">...</li>`));
+      }
+    }
+
+    if (current_page != num_pages - 1) pagination.append(next);
+
+    $(`#selectable-pagination`).html("");
+    if (Math.ceil(totalEntries / NUM_departmentS_PER_PAGE) > 1)
+      $(`#selectable-pagination`).append(pagination);
+  }
+
+  function populateCollegeFilter() {
+    $.ajax({
+      type: "GET",
+      url: "{% url 'rec-colleges' %}",
+      success: function (json) {
+        for (let college of json) {
+          $("#college_search").append(
+            $(`<option value="${college.static_id}">${college.name}</option>`)
+          );
+        }
+      },
+    });
+  }
+
+  function processAllocateItem() {
+    let member_list = [];
+    let Item = $("#Item-list-select").val();
+
+    if (Item.length == 0) {
+      swal({
+        title: "Failure",
+        text: `Please select a Item`,
+        icon: "error",
+      });
+
+      return;
+    }
+
+    for (let [id, department] of department_list) {
+      for (let student of department.data) {
+        if (student.selected) member_list.push(student.static_id);
+      }
+    }
+
+    if (member_list.length > Item_list.get(Item).available_space) {
+      swal({
+        title: "Failure",
+        text: `Insufficient Item capacity for specified members`,
+        icon: "error",
+      });
+
+      return;
+    }
+
+    if (member_list.length == 0) {
+      swal({
+        title: "Failure",
+        text: `Please select members to add to Item.`,
+        icon: "error",
+      });
+
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      url: `{% url "rec-Item-department-member-api" %}`,
+      data: {
+        Item: Item,
+        members: member_list,
+      },
+      success: function (json) {
+        swal({
+          title: "Success",
+          text: json["message"],
+          icon: "success",
+        }).then(function () {
+          window.location.reload();
+        });
+      },
+      error: function (xhr, errmsg, err) {
+        if (
+          xhr.responseJSON !== undefined &&
+          xhr.responseJSON.message !== undefined &&
+          xhr.responseJSON.message.length > 0
+        )
+          err = xhr.responseJSON.message;
+
+        swal({
+          title: "Failure",
+          text: err,
+          icon: "error",
+        });
+      },
+    });
+  }
+
+  populateItemList();
+  populatedepartments();
+  populateCollegeFilter();
+
+  $("#filter_button").click(function () {
+    current_page = 0;
+    populatedepartments();
+  });
+
+  $("#filter_clear").click(function () {
+    current_page = 0;
+    $("#college_search").val("");
+    $("#name_search").val("");
+    populatedepartments();
+  });
+
+  $(".move-right-button").click(function () {
+    moveCheckedStudents(true);
+  });
+  $(".move-left-button").click(function () {
+    moveCheckedStudents(false);
+  });
+</script>

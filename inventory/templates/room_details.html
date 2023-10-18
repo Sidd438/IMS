@@ -1,0 +1,36 @@
+{% extends "base.html" %} {% load django_tables2 %} {% block title %} Item
+Details {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}{% endblock stylesheets %} {% block sidebar %} {%include
+'rec-sidebar.html' %} {%endblock sidebar%} {% block content %}
+
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title">
+            {{ Item_data.name }} - {{table.rows|length}}
+          </h4>
+          {% include 'download_csv_button.html' %}
+        </div>
+        <div class="card-body">
+          {% include 'filter_form.html' %} {%render_table table%}
+          <div id="new_pagination" style="margin-top: 10px"></div>
+          <div class="d-flex">
+            {% include 'dealloc_button_html.html' %} {% include
+            'rec_checkout_button.html' %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %} {% include 'filter_js.html' %} {% include
+'dealloc_button_js.html' %} {% include 'rec_checkout_js.html' %} {% endblock
+javascripts %}

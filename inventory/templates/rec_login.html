@@ -1,0 +1,40 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Login</title>
+</head>
+<body class="login-page">
+    <div style=" padding-left: 38%; padding-top: 200px; text-align: center;">
+        <div style=" width: 400px; height: 500px;">
+    {% if form.errors %}
+      <p>username or password not correct</p>
+    {% endif %}
+            <main class="form-signin">
+              <form method="POST">
+                {% csrf_token %}
+                  <h1 class="h3 mb-3 fw-normal">Sign in</h1>
+                    <div style="padding-bottom: 20px;">
+                        <div class="form-floating">
+                        <input type="text" class="form-control" name="username" placeholder="Username" required autofocus>
+                        <label for="floatingInput">Username</label>
+                        </div>
+                    </div>
+                  <div class="form-floating">
+                    <input type="password" class="form-control" name="password" placeholder="Password" required>
+                    <label for="floatingPassword">Password</label>
+                  </div>
+
+                  <div class="checkbox mb-3">
+                  </div>
+                  <button class="w-100 btn btn-lg btn-primary" type="submit" value = "login" >Sign in</button>
+                </form>
+              </main>
+        </div>
+    </div>
+</body>
+</html>

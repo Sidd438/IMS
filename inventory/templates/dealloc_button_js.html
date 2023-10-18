@@ -1,0 +1,43 @@
+<script>
+  function deallocate_members ()
+  {
+      let members_list = $(".dealloc-button:checked").map(
+   function () { return this.id.split("dealloc-")[1]; }
+      ).get();
+
+      if (members_list.length == 0)
+   return swal({
+       title: "Failure",
+       text: "No members selected",
+       icon: "error",
+          });
+
+      $.ajax({
+   type: "DELETE",
+   url: "{% url "rec-Item-department-member-api" %}",
+   data: {members: members_list},
+   success: function (json) {
+              swal({
+  	 title: "Success",
+  	 text: json['message'],
+  	 icon: "success",
+              }).then(function () {
+  	 window.location.reload();
+       });
+   },
+   error: function (xhr, errmsg, err) {
+       if (xhr.responseJSON !== undefined &&
+  	 xhr.responseJSON.message !== undefined &&
+  	 xhr.responseJSON.message.length > 0)
+  	 err = xhr.responseJSON.message;
+
+       swal({
+  	 title: "Failure",
+  	 text: err,
+  	 icon: "error",
+              });
+   }
+      });
+  }
+  $("#deallocate-members-button").click(deallocate_members);
+</script>
