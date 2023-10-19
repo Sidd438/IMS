@@ -1,5 +1,6 @@
 import django_tables2 as tables
 from django.utils.html import format_html
+from .models import *
 
 
 class OrderedColumn(tables.Column):
@@ -88,7 +89,7 @@ class ItemTable(tables.Table):
     name = tables.Column(empty_values={})
     occupied_space = tables.Column(empty_values={})
     available_space = tables.Column(empty_values={})
-    total_capacity = tables.Column(empty_values={})
+    total_issued = tables.Column(empty_values={})
     view = tables.TemplateColumn(template_name="view_Item_button.html")
 
     class Meta:
@@ -105,8 +106,8 @@ class ItemTable(tables.Table):
     def render_available_space(self, value, record):
         return record.available_space
 
-    def render_total_capacity(self, value, record):
-        return record.total_capacity
+    def render_total_issued(self, value, record):
+        return record.total_issued
 
 
 class MemberDetailsTable(tables.Table):
@@ -141,30 +142,25 @@ class MemberDetailsTable(tables.Table):
 
 class ItemdepartmentMemberDetailsTable(tables.Table):
     name = tables.Column(
-        empty_values={}, accessor="department_member__member__profile__name", orderable=True
+        empty_values={}, accessor="Item__name", orderable=True
+    )
+
+    quantity = tables.Column(
+        empty_values={}, accessor="quantity", orderable=True
     )
 
     status = tables.Column(empty_values={}, orderable=True, accessor="status")
 
-    email = tables.Column(
-        empty_values={}, orderable=True, accessor="department_member__member__profile__email"
+    issued_to = tables.Column(
+        empty_values={}, orderable=True, accessor="department_member__name", verbose_name="Issued to"
     )
 
-    college = tables.Column(
-        empty_values={},
-        orderable=True,
-        accessor="department_member__member__profile__college",
-    )
-
-    department = tables.Column(
-        empty_values={}, orderable=True, accessor="department_member__department"
-    )
-    dealloc = tables.TemplateColumn(
+    Return = tables.TemplateColumn(
         template_name="Item_department_dealloc_button.html", exclude_from_export=True
     )
-    checkout = tables.TemplateColumn(
-        template_name="rec_checkout_checkbox.html", exclude_from_export=True
-    )
+    # checkout = tables.TemplateColumn(
+    #     template_name="rec_checkout_checkbox.html", exclude_from_export=True
+    # )
 
     class Meta:
         row_attrs = {"id": lambda record: str(record.static_id) + "_in_table"}
@@ -172,7 +168,7 @@ class ItemdepartmentMemberDetailsTable(tables.Table):
         orderable = False
 
     def render_status(self, value, record):
-        col = "success" if record.status == "Checked-in" else "danger"
+        col = "success" if record.status == "Issued" else "danger"
         return format_html(f"<div class=text-{col}>{record.status}</div>")
 
     def value_status(self, value, record):
@@ -202,12 +198,12 @@ class departmentListTable(tables.Table):
         orderable = False
 
     def render_total_members(self, value, record):
-        return record.department_members.filter(member__verified_by_controllz=True).count()
+        return record.department_members.count()
 
     def render_leader(self, value, record):
         profile = record.department_members.filter(is_leader=True).first()
         if profile:
-            return profile.member.profile.name
+            return profile.name
         return ""
 
     def render_Items(self, value, record):

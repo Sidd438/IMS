@@ -1,5 +1,5 @@
-{% if record.Item_department_member %} {% if
-record.Item_department_member.status == "Checked-in" %}
+{% if record.Item_department_member %}
+{% if record.Item_department_member.status == "Issued" %}
 <input
   id="checkout-{{record.Item_department_member.static_id}}"
   class="checkout-checkbox"
@@ -7,4 +7,5 @@ record.Item_department_member.status == "Checked-in" %}
 />
 {% else %}
 <i class="fas fa-check"></i>
-{% endif %} {% else %} - {% endif %}
+{% endif %}
+{% else %} - {% endif %}

@@ -2,19 +2,7 @@ from django.contrib.auth import views as auth_views
 from django.urls import path
 
 
-from .views import (
-    AllocateItemTemplate,
-    departmentListView,
-    departmentMemberListAPI,
-    SUUserLoginView,
-    ItemAddListAPI,
-    ItemCreateView,
-    ItemDetailsView,
-    ItemdepartmentMemberAPI,
-    ItemdepartmentMemberCheckoutAPI,
-    ItemdepartmentMembersListView,
-    ItemListView,
-)
+from .views import *
 
 urlpatterns = [
     path("login/", SUUserLoginView, name="rec-login-page"),
@@ -35,13 +23,14 @@ urlpatterns = [
         name="rec-Item-department-member-api",
     ),
     path(
-        "Item-department-members/checkout",
-        ItemdepartmentMemberCheckoutAPI.as_view(),
-        name="rec-Item-department-member-checkout",
+        "Item-department-members/return",
+        ItemdepartmentMemberReturnAPI.as_view(),
+        name="rec-Item-department-member-return",
     ),
     path("Items/", ItemAddListAPI.as_view(), name="Items"),
+    path("ItemAvailability/", ItemAvailabilityAPI.as_view(), name="Item-Availability"),
     # path("departments/", departmentListAPI.as_view(), name="rec-departments"),
-    path("departments/members/", departmentMemberListAPI.as_view(), name="rec-departments-members"),
+    path("departments/members/", departmentMemberListAPI.as_view(), name="departments-members"),
     # path("colleges/", CollegeListAPI.as_view(), name="rec-colleges"),
     # path(
     #     "create-Items-fetch",
@@ -61,6 +50,7 @@ urlpatterns = [
         name="allocated-members",
     ),
     path("department-list/", departmentListView.as_view(), name="department-list"),
+    path("department-details/<str:static_id>/", departmentDetailsView.as_view(), name="department-details"),
     # path(
     #     "department-details/<str:static_id>",
     #     departmentDetailsView.as_view(),

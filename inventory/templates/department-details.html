@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load render_table from django_tables2 %}
+
+{% block title %} Department Details {% endblock %}
+
+{% block content %}
+<div style="position: absolute; top: 4vh; left: 18%; width: 80%; height: 90%; ">
+  <h1 style="text-align: center; margin-bottom: 20px">{{department_data.name}}</h1>
+  <div class="row" style="display: flex;justify-content: space-around;gap: 2.5vh;align-items: center;align-content: space-around;flex-direction: column;flex-wrap: wrap;">
+    <div class="col-8 card" style="
+          box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px,
+            rgba(0, 0, 0, 0.23) 0px 3px 6px;
+          width: 80%;
+        ">
+      <div class="card-body">
+        <h2 style="margin-bottom: 20px; text-align: center">
+          <i class="fa fa-solid fa-user" style="margin-right: 5px"></i>
+          Items Issued - {{ items_allocated }}
+        </h2>
+        <div style = "height: 225px; overflow-y: auto;">
+          {% render_table table %}
+        </div>
+        {% include "rec_checkout_button.html" %}
+        <div id = "new_pagination" style = "margin-top: 10px;"></div>
+      </div>
+    </div>
+
+    <!-- ISSUE_ITEMS -->
+    <div class="card" style="
+            box-shadow: rgba(0, 0, 0, 0.16) 0px 3px 6px,
+              rgba(0, 0, 0, 0.23) 0px 3px 6px;
+            width: 40%;
+            padding: 1%  
+          ">
+      <div style="margin-bottom: 4%">
+        <h2 style="text-align: center">
+          Issue Items
+        </h2>
+      </div>
+
+      <div>
+        <form action="" style="padding: 0em 2em; display: flex; flex-direction: column; align-items: center;">
+          <div style="display: flex; width: 100%; gap: 5%">
+            <select class="form-select" id="item_static_id" onchange="change_availability()">
+              {% for item in items %}
+              <option value="{{item.static_id}}">
+                {{item.name}}
+              </option>
+              {%endfor%}
+            </select>
+            <input id="availability" class="item_availability form-control" placeholder="Availability" disabled="True"></input>
+          </div>
+          <br>
+          <input type="number" id="item_quantity" class = "form-control" min="1"  placeholder="Enter quantity to issue">
+          <br>
+          <select class="form-select" id="members">
+            {% for member in members %}
+            <option value="{{member.static_id}}">
+              {{member.name}}
+            </option>
+            {%endfor%}
+          </select>
+          <br>
+          <button id="issue_item_btn"  class="btn btn-success" style="position: justify;" onclick="issue_item()">Issue Item</button>
+        </form>
+      </div>
+    </div>
+  
+  </div>
+  </div>
+</div>
+</div>
+
+<script>
+  document
+    .getElementById("new_pagination")
+    .appendChild(document.getElementById("prev_pagination"));
+  leader_id = "{{department_leader.static_id}}"
+  document.getElementById(`${leader_id}_in_table`).getElementsByTagName("td")[0].innerHTML = '<i class = "fa fa-crown fa-solid" style = "color:#FFD700; margin-right : 5px"></i>' +document.getElementById(`${leader_id}_in_table`).getElementsByTagName("td")[0].innerHTML;
+</script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script type="text/javascript">
+  // window.CSRF_TOKEN = "{{csrf_token}}";
+  function issue_item() {
+    event.preventDefault();
+    var item_id = document.getElementById("item_static_id").value;
+    var quantity = document.getElementById("item_quantity").value;
+    var member_id = document.getElementById("members").value;
+
+    if(quantity<=0){
+      swal({
+        title: "Invalid quantity",
+        text: "Quantity should be greater than 0",
+        icon: "warning",
+      });
+      return;
+    }
+
+    $.ajax({
+      type: "POST",
+      datatype: "multipart/json",
+      traditional: true,
+      url: "{% url 'rec-Item-department-member-api'%}",
+      data: {
+        item_id: item_id,
+        quantity: quantity,
+        member_id: member_id,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+      },
+      success: function (json) {
+        swal({
+          title: "Success",
+          text: json.message,
+          icon: "success",
+        }).then(function(isConfirm){
+            window.location.reload();
+          });;
+
+      },
+
+      error: function (xhr, errmsg, err) {
+        var jsondata=JSON.parse(xhr.responseText);
+        swal({
+          title: "Failed",
+          text: jsondata.message,
+          icon: "error",
+        });
+      },
+    });
+  }
+
+  function checkout_members(){
+    event.preventDefault();
+
+    var itemlist= [];
+    issued_item_checkboxes = document.getElementsByClassName("dealloc-button");
+    for(var i=0;i<issued_item_checkboxes.length;i++){
+      if(issued_item_checkboxes[i].checked){
+        let staticid = issued_item_checkboxes[i].id.split("dealloc-")[1]
+        let quantity = document.getElementById(`dealloc-quantity-${staticid}`).value
+        itemlist.push([staticid, quantity]);
+      }
+    }
+
+    console.log(itemlist)
+
+    $.ajax({
+      type: "POST",
+      datatype: "multipart/json",
+      traditional: true,
+      url: "{% url 'rec-Item-department-member-return' %}",
+      data: {
+        itemlist: itemlist,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+      },
+      success: function (json) {
+        swal({
+          title: "Success",
+          text: json.message,
+          icon: "success",
+        }).then(function(isConfirm){
+          window.location.reload();;})
+      },
+
+      error: function (xhr, errmsg, err) {
+        var jsondata=JSON.parse(xhr.responseText);
+        swal({
+          title: "Items Could Not be Returned",
+          text: jsondata.message,
+          icon: "warning",
+        });
+      },
+    });
+  }
+
+  function change_availability(){
+    let item_id = document.getElementById("item_static_id").value;
+    let availability = document.getElementById("availability");
+    $.ajax({
+      type: "GET",
+      datatype: "multipart/json",
+      traditional: true,
+      url: "{% url 'Item-Availability' %}",
+      data: {
+        static_id: item_id,
+        csrfmiddlewaretoken: "{{csrf_token}}",
+      },
+      success: function (json) {
+        availability.setAttribute("value", json.availability);
+      },
+
+      error: function (xhr, errmsg, err) {
+        var jsondata=JSON.parse(xhr.responseText);
+        swal({
+          title: "Failed",
+          text: jsondata.message,
+          icon: "error",
+        });
+      },
+    })
+  }
+  change_availability();
+
+</script>
+
+
+{% endblock %}

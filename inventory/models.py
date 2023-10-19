@@ -4,7 +4,7 @@ from django.db import models
 from django.db.models import Sum
 from django.forms import ValidationError
 
-Item_BOOKING_STATUS = [("Checked-in", "Checked-in"), ("Checked-out", "Checked-out")]
+Item_BOOKING_STATUS = [("Issued", "Issued"), ("Returned", "Returned")]
 
 ISSUE_STATUS = [("unverified", "unverified"), ("verified", "verified")]
 
@@ -15,16 +15,8 @@ class Item(models.Model):
     )
     # Generate unique names?
     name = models.CharField(max_length=100, unique=True)
-    total_capacity = models.PositiveSmallIntegerField(default=1)
-
-    @property
-    def available_space(self):
-        available_space = self.total_capacity - self.occupied_space
-        return available_space
-
-    @property
-    def occupied_space(self):
-        return self.Item_members.count()
+    total_stock = models.PositiveIntegerField(default=1)
+    total_issued = models.PositiveSmallIntegerField(default=1)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)
@@ -40,23 +32,22 @@ class Item(models.Model):
         #     return super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.name} - {self.total_capacity}"
+        return f"{self.name} - {self.total_issued}"
 
 
 class Department(models.Model):
     static_id = models.UUIDField(
         max_length=48, unique=True, default=uuid.uuid4, editable=False
     )
+
     name = models.CharField(max_length=100, unique=True)
+    # depends on number of department members (is there a limit?)
+    total_expense = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
     created_at = models.DateTimeField(null=False, auto_now_add=True)
     deleted_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     is_deleted = models.BooleanField(null=False, default=False)
-
-    # # BITS-P Basketball team
-    name = models.CharField(max_length=100, unique=True, blank=True)
-    # depends on number of department members (is there a limit?)
-    total_expense = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     # ensure that representative in Department - department-members?
     def save(self, *args, **kwargs):
@@ -113,9 +104,11 @@ class ItemDepartmentMember(models.Model):
         max_length=48, unique=True, default=uuid.uuid4, editable=False
     )
 
-    department_member = models.OneToOneField(
+    department_member = models.ForeignKey(
         DepartmentMember, related_name="Item_department_member", on_delete=models.PROTECT
     )
+
+    quantity = models.PositiveIntegerField(default=0)
 
     Item = models.ForeignKey(
         Item,

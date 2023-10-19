@@ -11,7 +11,7 @@ class BaseForm(forms.ModelForm):
 
     class Meta:
         model = Item
-        fields = ["name", "total_capacity"]
+        fields = ["name", "total_issued"]
 
 
 # class CreateInventoryForm(forms.ModelForm):

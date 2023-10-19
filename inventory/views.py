@@ -1,4 +1,5 @@
 from datetime import timedelta
+from typing import Any, Dict
 
 from django.contrib import messages
 from django.contrib.auth import authenticate, login
@@ -6,7 +7,6 @@ from django.db import transaction
 from django.http import HttpResponseRedirect
 from django.shortcuts import redirect, render
 from django.urls import reverse
-from django.utils import timezone
 from django.views.decorators.http import require_http_methods
 from django.views.generic import TemplateView
 from django.views.generic.edit import CreateView
@@ -14,19 +14,14 @@ from django_filters import rest_framework as dj_filters
 from django_filters.views import FilterView
 from django_tables2 import SingleTableMixin, SingleTableView
 from django_tables2.export.views import ExportMixin
+from django.db.models import Count
 
 # from django_filters import rest_framework as filters
 from rest_framework import filters, generics, status
 from rest_framework.generics import *
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response as Drf_Response
-from rest_framework.settings import api_settings
 from rest_framework.views import APIView
-
-
-# from pcr.filters import *
-from inventory.pagination import ApprovedMembersPagination
-from utils.response import custom_response
 
 from .filters import *
 from .forms import *
@@ -50,19 +45,26 @@ def SUUserLoginView(request):
             messages.warning(request, "Unauthorized Action")
             return HttpResponseRedirect(request.path)
         login(request, user)
-        return redirect("SU-dashboard")
+        return redirect("department-list")
 
     if request.method == "GET":
         return render(request, "login.html")
 
 
-# class DashboardView(SUAdmin_or_SuperuserMixin, TemplateView):
-#     template_name = "rec_dashboard.html"
-
-
 class AllocateItemTemplate(SUAdmin_or_SuperuserMixin, TemplateView):
     template_name = "rec_allocate.html"
 
+class ItemAvailabilityAPI(APIView):
+    def get(self, request):
+        try:
+            item = Item.objects.get(static_id=self.request.GET.get("static_id"))
+            return Drf_Response(
+                { "availability" : f"{item.total_stock}"}, status=status.HTTP_200_OK,
+            )
+        except Exception as e:
+            return Drf_Response(
+                {"message":str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 # class CreatedepartmentView(SUAdmin_or_SuperuserMixin, APIView):
 #     def get_department_name(self):
@@ -147,25 +149,27 @@ class ItemAddListAPI(SUAdmin_or_SuperuserMixin, generics.ListCreateAPIView):
 
 class ItemdepartmentMemberAPI(SUAdmin_or_SuperuserMixin, APIView):
     def post(self, request):
-        members = request.POST.getlist("members[]")
-        Item = request.POST.get("Item")
+        item = get_object_or_404(Item, static_id=request.POST.get("item_id"))
+        department_member = get_object_or_404(
+            DepartmentMember, static_id=request.POST.get("member_id")
+        )
 
-        Item = get_object_or_404(Item, static_id=Item)
         try:
             with transaction.atomic():
-                for department_member_static_id in members:
-                    department_member = get_object_or_404(
-                        DepartmentMember, static_id=department_member_static_id
-                    )
-                    rgp, created = ItemDepartmentMember.objects.get_or_create(
-                        Item=Item, department_member=department_member
-                    )
-                    if not created:
-                        raise Exception("department member already in a department")
+                rgp, created = ItemDepartmentMember.objects.get_or_create(
+                    Item=item,
+                    department_member=department_member
+                )
 
-            return Drf_Response({"message": "Members added successfully"})
+                rgp.quantity += int(request.POST.get("quantity"))
+                rgp.Item.total_issued += int(request.POST.get("quantity"))
+                rgp.Item.total_stock -= int(request.POST.get("quantity"))
+                rgp.Item.save()
+                rgp.save()
+                return Drf_Response({"message": "Issued successfully"})
+                
         except Exception as e:
-            return Drf_Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Drf_Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def delete(self, request):
         members = request.POST.getlist("members[]")
@@ -180,24 +184,34 @@ class ItemdepartmentMemberAPI(SUAdmin_or_SuperuserMixin, APIView):
             return Drf_Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class ItemdepartmentMemberCheckoutAPI(SUAdmin_or_SuperuserMixin, APIView):
+class ItemdepartmentMemberReturnAPI(SUAdmin_or_SuperuserMixin, APIView):
     def post(self, request):
-        members = request.POST.getlist("members[]")
+        itemlist = self.request.POST.getlist("itemlist")
         try:
             with transaction.atomic():
-                for rgp_static_id in members:
+                for item in itemlist:
+                    (rgp_static_id, quantity) = item.split(",")
                     rgp = get_object_or_404(ItemDepartmentMember, static_id=rgp_static_id)
-                    if rgp.status != Item_BOOKING_STATUS[1][0]:
-                        rgp.status = Item_BOOKING_STATUS[1][0]
+
+                    if (rgp.quantity - int(quantity)) < 0:
+                        raise ValueError("Return quantity is greater than issued quantity")
+                    elif (rgp.quantity - int(quantity)) == 0:
+                        rgp.Item.total_issued -= rgp.quantity
+                        rgp.Item.total_stock += rgp.quantity
+                        rgp.Item.save()
+                        rgp.delete()
                     else:
-                        raise Exception("Member has already checked-out")
+                        rgp.Item.total_issued -= int(quantity)
+                        rgp.Item.total_stock += int(quantity)
+                        rgp.Item.save()
+                        rgp.quantity -= int(quantity)
+                        rgp.save()
 
-                    rgp.save()
 
-            return Drf_Response({"message": "Members checked-out successfully"})
+            return Drf_Response({"message": "Returns done successfully"})
 
         except Exception as e:
-            return Drf_Response({"message": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            return Drf_Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DepartmentListAPI(SUAdmin_or_SuperuserMixin, generics.ListAPIView):
@@ -280,11 +294,34 @@ class departmentListView(SUAdmin_or_SuperuserMixin, SingleTableView):
     model = Department
     table_class = departmentListTable
     table_pagination = {"per_page": 10}
-    template_name = "departmentlist.html"
+    template_name = "department-list.html"
 
     def get_queryset(self):
         return super().get_queryset().order_by("name")
+    
+class departmentDetailsView(SUAdmin_or_SuperuserMixin, SingleTableView):
+    model = ItemDepartmentMember
+    table_class = ItemdepartmentMemberDetailsTable
+    table_pagination = {"per_page": 10}
+    template_name = "department-details.html"
 
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        department = Department.objects.filter(
+            static_id=self.kwargs["static_id"], is_deleted=False
+        ).first()
+        context["department_data"] = department
+        context["items_allocated"] = sum(ItemDepartmentMember.objects.filter(
+            department_member__department = department
+        ).values_list('quantity', flat=True))
+        context["items"] = Item.objects.all()
+        context["members"] = department.department_members.all().order_by("-is_leader")
+        # context["department_leader"] = department.department_members.filter(is_leader=True).first()
+        return context
+
+    def get_queryset(self):
+        return super().get_queryset().filter(department_member__department__static_id = self.kwargs["static_id"]).order_by("Item__name")
+        # return (Item.objects.filter(Item_members__department_member__department__static_id = self.kwargs["static_id"]).distinct())
 
 # class AllMembersView(
 #     SUAdmin_or_SuperuserMixin, SingleTableMixin, ExportMixin, FilterView
