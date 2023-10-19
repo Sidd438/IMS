@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load django_tables2 %}
+{% block title %} Items {% endblock %}
+
+{% block content %}
+
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header" style="display: flex;justify-content: space-between;align-items: center;">
+          <h4 class="card-title" style="margin-bottom: 0 !important;">Item List - {{table.rows|length}}</h4>
+          {% if EditPage %}
+            {% include "item_save_button.html" %}
+          {% else %}
+            {% include "item_edit_button.html" %}
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {%render_table table%}
+          <div id="new_pagination" style="margin-top: 10px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+    function edit_items() {
+        stockinputs = document.getElementsByClassName("stock-edit");
+        values = []
+        for (si of stockinputs) {
+            values.push([si.value, si.name.split("stock-")[1]])
+        } 
+        console.log(values)
+
+        $.ajax({
+          type: "POST",
+          datatype: "multipart/json",
+          traditional: true,
+          url: "{% url 'edit-items-api' %}",
+          data: {
+            itemlist: values,
+            csrfmiddlewaretoken: "{{csrf_token}}",
+          },
+          success: function (json) {
+            swal({
+              title: "Success",
+              text: json.message,
+              icon: "success",
+            }).then(function(isConfirm){
+              window.location.replace("{% url 'Item-list' %}")})
+          },
+    
+          error: function (xhr, errmsg, err) {
+            var jsondata=JSON.parse(xhr.responseText);
+            swal({
+              title: "Items Could Not be Returned",
+              text: jsondata.message,
+              icon: "warning",
+            });
+          },
+        });
+    }
+</script>
+{% endblock javascripts %}

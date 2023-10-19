@@ -39,18 +39,18 @@
     <strong style="font-size: 100%;">Alloted Members</strong>
   </a>
 </li> -->
-<hr>
+<!-- <hr> -->
 <li style="width : 100%">
   <a href="{% url 'department-list'%}" {% if request.resolver_match.url_name == 'department-list' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
     <strong style="font-size: 100%;">All departments</strong>
   </a>
 </li>
-<hr>
-     <!-- <li style="width : 100%">
+<!-- <hr>
+     <li style="width : 100%">
     <a href="{% url 'department-list' %}" {% if request.resolver_match.url_name == 'create-departments' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
       <strong style="font-size: 100%;">Allocate Items</strong>
   </a>
-</li>
+</li> -->
     <hr>
 
 <li style="width : 100%">
@@ -60,12 +60,12 @@
 </li>
 
 <hr>
-<li style="width : 100%">
+<!-- <li style="width : 100%">
   <a href="{% url 'create-Item'%}" {% if request.resolver_match.url_name == 'create-inventory' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
     <strong style="font-size: 100%;">Add/Update Item</strong>
 </a>
-</li> -->
-<hr>
+</li>
+<hr> -->
 </ul>
 <hr>
 </div>
@@ -75,3 +75,6 @@
 </div>
 </body>
 </html>
+
+{% block javascripts %}
+{% endblock javascripts %}

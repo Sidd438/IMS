@@ -86,29 +86,40 @@ class departmentMembersTable(AlldepartmentMembersTable):
 
 
 class ItemTable(tables.Table):
-    name = tables.Column(empty_values={})
-    occupied_space = tables.Column(empty_values={})
-    available_space = tables.Column(empty_values={})
-    total_issued = tables.Column(empty_values={})
-    view = tables.TemplateColumn(template_name="view_Item_button.html")
+    name = tables.Column(empty_values={}, accessor="name")
+    total_issued = tables.Column(empty_values={}, accessor="total_issued")
+    total_stock = tables.Column(empty_values={}, accessor="total_stock")
+    issued_to = tables.Column(empty_values={})
+    # view = tables.TemplateColumn(template_name="view_Item_button.html")
 
     class Meta:
         row_attrs = {"id": lambda record: str(record.static_id) + "_row"}
         template_name = "table_base.html"
         orderable = False
 
-    def render_name(self, value, record):
-        return record.name
+    def render_issued_to(self, value, record):
+        a = []
+        for dep in list(record.Item_members.all().values_list("department_member__department__name", flat=True).distinct()):
+            quantity = sum(ItemDepartmentMember.objects.filter(
+                Item = record,
+                department_member__department__name = dep
+            ).values_list('quantity', flat=True))
+            a.append(f"{dep} - {quantity}")
+            
+        return format_html("<br><hr>".join(a))
 
-    def render_occupied_space(self, value, record):
-        return record.occupied_space
+class ItemEditTable(ItemTable):
+    total_stock = tables.Column(empty_values={})
 
-    def render_available_space(self, value, record):
-        return record.available_space
+    class Meta:
+        row_attrs = {"id": lambda record: str(record.static_id) + "_row"}
+        template_name = "table_base.html"
+        orderable = False
 
-    def render_total_issued(self, value, record):
-        return record.total_issued
-
+    def render_total_stock(self, value, record):
+        return format_html(
+            f"<input type='number' class='form-control stock-edit' value='{record.total_stock}' min='0' name=\"stock-{record.static_id}\" style = \"width: fit-content;\"/>"
+        )
 
 class MemberDetailsTable(tables.Table):
     name = tables.Column(empty_values={}, orderable=False)
@@ -219,21 +230,21 @@ class departmentListTable(tables.Table):
         return record.name
 
 
-class ItemListTable(tables.Table):
-    item_code = tables.Column(empty_values={}, orderable=False)
-    item_name = tables.Column(empty_values={}, orderable=False)
-    available_quantity = tables.Column(empty_values={}, orderable=False)
+# class ItemListTable(tables.Table):
+#     item_code = tables.Column(empty_values={}, orderable=False)
+#     item_name = tables.Column(empty_values={}, orderable=False)
+#     available_quantity = tables.Column(empty_values={}, orderable=False)
 
-    class Meta:
-        row_attrs = {"id": lambda record: str(record.static_id) + "_row"}
-        template_name = "table_base.html"
-        orderable = False
+#     class Meta:
+#         row_attrs = {"id": lambda record: str(record.static_id) + "_row"}
+#         template_name = "table_base.html"
+#         orderable = False
 
-    def render_item_code(self, value, record):
-        return record.item_code
+#     def render_item_code(self, value, record):
+#         return record.item_code
 
-    def render_item_name(self, value, record):
-        return record.name
+#     def render_item_name(self, value, record):
+#         return record.name
 
-    def render_available_quantity(self, value, record):
-        return record.present_quantity
+#     def render_available_quantity(self, value, record):
+#         return record.present_quantity
