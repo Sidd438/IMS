@@ -5,15 +5,15 @@ from .models import Department, DepartmentMember, Item, ItemDepartmentMember
 
 
 class ItemSerializer(serializers.ModelSerializer):
-    available_space = serializers.SerializerMethodField()
+    total_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
         fields = "__all__"
         read_only_fields = ("static_id",)
 
-    def get_available_space(self, instance):
-        return instance.available_space
+    def get_total_stock(self, instance):
+        return instance.total_stock
 
 
 class DepartmentMemberSerializer(serializers.ModelSerializer):

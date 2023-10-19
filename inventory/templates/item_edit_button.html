@@ -1,0 +1,9 @@
+<a href="{% url 'Item-edit'%}" {% if request.resolver_match.url_name == 'Item-edit' %} class="nav-link active" {% endif %} class="nav-link" aria-current="page">
+<button
+  class="btn btn-outline-success mt-4"
+  id="edit-items-button"
+  style="margin: 0 !important; display: flex;"
+>
+  Edit Stock
+</button>
+</a>

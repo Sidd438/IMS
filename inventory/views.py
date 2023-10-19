@@ -250,20 +250,47 @@ class ItemListView(
 
     def get_queryset(self):
         return super().get_queryset().order_by("name")
+    
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["EditPage"] = False
+        return context
+    
+class ItemEditView(ItemListView):
+    table_class = ItemEditTable
 
+    def get_context_data(self, **kwargs: Any) -> Dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["EditPage"] = True
+        return context
+    
+class EditItemsAPI(APIView):
+    def post(self, request):
+        try:
+            with transaction.atomic():
+                for item in request.POST.getlist("itemlist"):
+                    (total_stock, static_id) = item.split(",")
+                    item = Item.objects.get(static_id=static_id)
+                    if not item:
+                        raise ValueError("Invalid Item ID")
+                    item.total_stock = int(total_stock)
+                    item.save()
+            return Drf_Response({"message": "Items updated successfully"})
+        except Exception as e:
+            return Drf_Response({"message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 
 class ItemDetailsView(SUAdmin_or_SuperuserMixin, SingleTableMixin, FilterView):
-    model = ItemDepartmentMember
+    model = Item
     table_class = ItemdepartmentMemberDetailsTable
     template_name = "Item_details.html"
     table_pagination = {"per_page": 10}
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        Item = Item.objects.filter(static_id=self.kwargs["static_id"]).first()
-        context["Item_data"] = Item
+        item = Item.objects.filter(static_id=self.kwargs["static_id"]).first()
+        context["Item_data"] = item
         return context
 
     def get_queryset(self):

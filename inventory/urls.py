@@ -27,7 +27,7 @@ urlpatterns = [
         ItemdepartmentMemberReturnAPI.as_view(),
         name="rec-Item-department-member-return",
     ),
-    path("Items/", ItemAddListAPI.as_view(), name="Items"),
+    path("Items/", ItemListView.as_view(), name="Items"),
     path("ItemAvailability/", ItemAvailabilityAPI.as_view(), name="Item-Availability"),
     # path("departments/", departmentListAPI.as_view(), name="rec-departments"),
     path("departments/members/", departmentMemberListAPI.as_view(), name="departments-members"),
@@ -41,6 +41,8 @@ urlpatterns = [
     # path("get-item-detail/", GetItemDetailAPIView.as_view(), name="get-item-detail"),
     # path("get-Item-detail/", GetItemDetailAPIView.as_view(), name="get-Item-detail"),
     path("Item-list/", ItemListView.as_view(), name="Item-list"),
+    path("Item-edit/", ItemEditView.as_view(), name="Item-edit"),
+    path("edit-items-api/", EditItemsAPI.as_view(), name="edit-items-api"),
     path(
         "Item-details/<str:static_id>", ItemDetailsView.as_view(), name="Item-details"
     ),
