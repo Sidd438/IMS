@@ -17,6 +17,8 @@ urlpatterns = [
     # ),
     ##############################################################################
     path("create-Item/", ItemCreateView.as_view(), name="create-Item"),
+    path("create-department/", DepartmentCreateView.as_view(), name="create-department"),
+    path("create-department-member/", DepartmentMemberCreateView.as_view(), name="create-department-member"),
     path(
         "Item-department-members/",
         ItemdepartmentMemberAPI.as_view(),

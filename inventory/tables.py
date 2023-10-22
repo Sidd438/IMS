@@ -88,7 +88,7 @@ class departmentMembersTable(AlldepartmentMembersTable):
 class ItemTable(tables.Table):
     name = tables.Column(empty_values={}, accessor="name")
     total_issued = tables.Column(empty_values={}, accessor="total_issued")
-    total_stock = tables.Column(empty_values={}, accessor="total_stock")
+    remaining_stock = tables.Column(empty_values={}, accessor="remaining_stock")
     issued_to = tables.Column(empty_values={})
     # view = tables.TemplateColumn(template_name="view_Item_button.html")
 
@@ -109,16 +109,16 @@ class ItemTable(tables.Table):
         return format_html("<br><hr>".join(a))
 
 class ItemEditTable(ItemTable):
-    total_stock = tables.Column(empty_values={})
+    remaining_stock = tables.Column(empty_values={})
 
     class Meta:
         row_attrs = {"id": lambda record: str(record.static_id) + "_row"}
         template_name = "table_base.html"
         orderable = False
 
-    def render_total_stock(self, value, record):
+    def render_remaining_stock(self, value, record):
         return format_html(
-            f"<input type='number' class='form-control stock-edit' value='{record.total_stock}' min='0' name=\"stock-{record.static_id}\" style = \"width: fit-content;\"/>"
+            f"<input type='number' class='form-control stock-edit' value='{record.remaining_stock}' min='0' name=\"stock-{record.static_id}\" style = \"width: fit-content;\"/>"
         )
 
 class MemberDetailsTable(tables.Table):
@@ -199,7 +199,7 @@ class AllocatedMembersTable(ItemdepartmentMemberDetailsTable):
 class departmentListTable(tables.Table):
     department = tables.Column(empty_values={})
     total_members = tables.Column(empty_values={})
-    leader = tables.Column(empty_values={})
+    # leader = tables.Column(empty_values={})
     Items = tables.Column(empty_values={})
     view = tables.TemplateColumn(template_name="department_view_button.html")
 
@@ -211,11 +211,11 @@ class departmentListTable(tables.Table):
     def render_total_members(self, value, record):
         return record.department_members.count()
 
-    def render_leader(self, value, record):
-        profile = record.department_members.filter(is_leader=True).first()
-        if profile:
-            return profile.name
-        return ""
+    # def render_leader(self, value, record):
+    #     profile = record.department_members.filter(is_leader=True).first()
+    #     if profile:
+    #         return profile.name
+    #     return ""
 
     def render_Items(self, value, record):
         return format_html(

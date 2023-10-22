@@ -15,8 +15,8 @@ class Item(models.Model):
     )
     # Generate unique names?
     name = models.CharField(max_length=100, unique=True)
-    total_stock = models.PositiveIntegerField(default=1)
-    total_issued = models.PositiveSmallIntegerField(default=1)
+    remaining_stock = models.PositiveIntegerField(default=0)
+    total_issued = models.PositiveSmallIntegerField(default=0)
 
     def save(self, *args, **kwargs):
         return super().save(*args, **kwargs)

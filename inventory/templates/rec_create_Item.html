@@ -1,27 +1,26 @@
-{% extends "base.html" %} {% load django_tables2 %} {% block title %} Item
-Details {% endblock %}
+{% extends "base.html" %} {% load django_tables2 %}
+{% block title %} Create Item {% endblock %}
 
 <!-- Specific Page CSS goes HERE  -->
-{% block stylesheets %}{% endblock stylesheets %} {% block sidebar %} {%include
-'rec-sidebar.html' %} {%endblock sidebar%} {% block content %}
+{% block content %}
 
 <div class="content">
   <div class="row">
     <div class="col-md-12">
       <div class="card">
         <div class="card-header">
-          <h4 class="card-title">Add Item</h4>
+          <h4 class="card-title" style="margin: inherit;">Create new Item</h4>
         </div>
         <div class="card-body">
-          <h1>Create Item</h1>
-          <form id="create_form" action="javascript:void(0);">
+          <form id="create_form" action="javascript:void(0);" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            {% csrf_token %}
             {% for field in form %}
-            <div class="form-department">
+            <div class="form-department" style="margin: 2%; width: 80%;">
               <label>{{field.label}}</label>
               {{field}}
             </div>
             {% endfor %}
-            <button id="create_button" class="btn">Create</button>
+            <button id="create_button" class="btn btn-outline-primary mt-4" style="width: 20%">Create</button>
           </form>
         </div>
       </div>
@@ -53,12 +52,12 @@ Details {% endblock %}
 
     if (Item_list.indexOf($("#id_name").val()) !== -1)
       return err("A Item with the same name already exists.");
-    if ($("#id_total_capacity").val() < 1)
-      return err("Total capacity should be greater than zero");
+    if ($("#id_remaining_stock").val() < 1)
+      return err("Stock should be greater than zero");
 
     $.ajax({
       type: "POST",
-      url: "{% url 'Items' %}",
+      url: "{% url 'create-Item' %}",
       datatype: "multipart/json",
       data: $("#create_form").serialize(),
       error: function (xhr, error, errmsg) {

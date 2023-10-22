@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Item, Item
+from .models import *
 
 
 class BaseForm(forms.ModelForm):
@@ -9,9 +9,23 @@ class BaseForm(forms.ModelForm):
         for field_name, field in self.fields.items():
             field.widget.attrs["class"] = "form-control"
 
+class ItemCreateForm(BaseForm):
     class Meta:
         model = Item
-        fields = ["name", "total_issued"]
+        fields = ["name", "remaining_stock"]
+        labels = {
+            "remaining_stock" : "Initial Stock"
+        }
+
+class DepartmentCreateForm(BaseForm):
+    class Meta:
+        model = Department
+        fields = ["name"]
+
+class DepartmentMemberCreateForm(BaseForm):
+    class Meta:
+        model = DepartmentMember
+        fields = ["name", "department"]
 
 
 # class CreateInventoryForm(forms.ModelForm):

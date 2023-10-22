@@ -1,0 +1,83 @@
+{% extends "base.html" %} {% load django_tables2 %}
+{% block title %} Create Item {% endblock %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block content %}
+
+<div class="content">
+  <div class="row">
+    <div class="col-md-12">
+      <div class="card">
+        <div class="card-header">
+          <h4 class="card-title" style="margin: inherit;">Add Member to Department</h4>
+        </div>
+        <div class="card-body">
+          <form id="create_form" action="javascript:void(0);" style="width: 100%; display: flex; flex-direction: column; align-items: center;">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="form-department" style="margin: 2%; width: 80%;">
+              <label>{{field.label}}</label>
+              {{field}}
+            </div>
+            {% endfor %}
+            <button id="create_button" class="btn btn-outline-primary mt-4" style="width: 20%">Create</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock content %} {% block javascripts %}
+<script>
+  const Item_list = "{{Itemlist}}".split(",");
+
+  function err(msg) {
+    swal({
+      title: "Failed",
+      text: msg,
+      icon: "error",
+    });
+  }
+  function success(msg, cb) {
+    swal({
+      title: "Success",
+      text: msg,
+      icon: "success",
+    }).then(cb);
+  }
+
+  $("#create_button").click(function () {
+    if ($("#id_name").val().length == 0) return;
+
+    if (Item_list.indexOf($("#id_name").val()) !== -1)
+      return err("A Item with the same name already exists.");
+
+    $.ajax({
+      type: "POST",
+      url: "{% url 'create-department-member' %}",
+      datatype: "multipart/json",
+      data: $("#create_form").serialize(),
+      error: function (xhr, error, errmsg) {
+        if (xhr.responseJSON == undefined) return err(errmsg);
+
+        for (let error in xhr.responseJSON) {
+          errors = xhr.responseJSON[error].join("<br>");
+          $(`<div class="invalid-feedback">${errors}</div>`).insertAfter(
+            $(`.form-control[name='${error}']`)
+              .parent()
+              .find(".form-control:last")
+              .addClass("is-invalid")
+          );
+        }
+      },
+      success: function () {
+        success("Successfully added the Member", function () {
+          $("#create_form").trigger("reset");
+          window.location.reload();
+        });
+      },
+    });
+  });
+</script>
+{% endblock javascripts %}

@@ -27,13 +27,9 @@
       <strong style="font-size: 100%;">All Items</strong>
   </a>
 </li>
-<hr>
-<li style="width : 100%">
-  <a href="{% url 'create-Item'%}" {% if request.resolver_match.url_name == 'create-Items' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
-    <strong style="font-size: 100%;">Add Items</strong>
-</a>
-</li>
-<hr>
+<hr> -->
+
+<!--
 <li style="width : 100%">
   <a href="{% url 'departments-members'%}" {% if request.resolver_match.url_name == 'departmentmembers' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
     <strong style="font-size: 100%;">Alloted Members</strong>
@@ -60,6 +56,28 @@
 </li>
 
 <hr>
+
+<li style="width : 100%">
+  <a href="{% url 'create-Item'%}" {% if request.resolver_match.url_name == 'create-Item' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Add Item</strong>
+</a>
+</li>
+
+<hr>
+
+<li style="width : 100%">
+  <a href="{% url 'create-department'%}" {% if request.resolver_match.url_name == 'create-department' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Add Department</strong>
+</a>
+</li>
+
+<hr>
+
+<li style="width : 100%">
+  <a href="{% url 'create-department-member'%}" {% if request.resolver_match.url_name == 'create-department-member' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Add Member</strong>
+</a>
+</li>
 <!-- <li style="width : 100%">
   <a href="{% url 'create-Item'%}" {% if request.resolver_match.url_name == 'create-inventory' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
     <strong style="font-size: 100%;">Add/Update Item</strong>

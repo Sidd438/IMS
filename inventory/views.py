@@ -59,7 +59,7 @@ class ItemAvailabilityAPI(APIView):
         try:
             item = Item.objects.get(static_id=self.request.GET.get("static_id"))
             return Drf_Response(
-                { "availability" : f"{item.total_stock}"}, status=status.HTTP_200_OK,
+                { "availability" : f"{item.remaining_stock}"}, status=status.HTTP_200_OK,
             )
         except Exception as e:
             return Drf_Response(
@@ -123,12 +123,64 @@ class ItemAvailabilityAPI(APIView):
 
 
 # add filtering to only pass members who aren't in a department / department_members havent been made
+class DepartmentCreateView(SUAdmin_or_SuperuserMixin, CreateView):
+    model = Department
+    form_class = DepartmentCreateForm
+    template_name = "rec_create_Department.html"
 
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            Department = form.save(commit=False)
+            Department.save()
+            return redirect("create-department")
+        return render(request, self.template_name, {"form": form})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context["Itemlist"] = ",".join(
+            Department.objects.filter().values_list("name", flat=True)
+        )
+        return context
+
+    def get_success_url(self) -> str:
+        return reverse("create-department")
+    
+class DepartmentMemberCreateView(SUAdmin_or_SuperuserMixin, CreateView):
+    model = DepartmentMember
+    form_class = DepartmentMemberCreateForm
+    template_name = "rec_create_DepartmentMember.html"
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            DepartmentMember = form.save(commit=False)
+            DepartmentMember.save()
+            return redirect("create-department-member")
+        return render(request, self.template_name, {"form": form})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data()
+        context["Itemlist"] = ",".join(
+            DepartmentMember.objects.filter().values_list("name", flat=True)
+        )
+        return context
+
+    def get_success_url(self) -> str:
+        return reverse("create-department-member")
 
 class ItemCreateView(SUAdmin_or_SuperuserMixin, CreateView):
     model = Item
-    form_class = BaseForm
+    form_class = ItemCreateForm
     template_name = "rec_create_Item.html"
+
+    def post(self, request, *args, **kwargs):
+        form = self.form_class(request.POST)
+        if form.is_valid():
+            Item = form.save(commit=False)
+            Item.save()
+            return redirect("create-Item")
+        return render(request, self.template_name, {"form": form})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data()
@@ -138,7 +190,7 @@ class ItemCreateView(SUAdmin_or_SuperuserMixin, CreateView):
         return context
 
     def get_success_url(self) -> str:
-        return reverse("create-Items")
+        return reverse("create-Item")
 
 
 class ItemAddListAPI(SUAdmin_or_SuperuserMixin, generics.ListCreateAPIView):
@@ -163,7 +215,7 @@ class ItemdepartmentMemberAPI(SUAdmin_or_SuperuserMixin, APIView):
 
                 rgp.quantity += int(request.POST.get("quantity"))
                 rgp.Item.total_issued += int(request.POST.get("quantity"))
-                rgp.Item.total_stock -= int(request.POST.get("quantity"))
+                rgp.Item.remaining_stock -= int(request.POST.get("quantity"))
                 rgp.Item.save()
                 rgp.save()
                 return Drf_Response({"message": "Issued successfully"})
@@ -197,12 +249,12 @@ class ItemdepartmentMemberReturnAPI(SUAdmin_or_SuperuserMixin, APIView):
                         raise ValueError("Return quantity is greater than issued quantity")
                     elif (rgp.quantity - int(quantity)) == 0:
                         rgp.Item.total_issued -= rgp.quantity
-                        rgp.Item.total_stock += rgp.quantity
+                        rgp.Item.remaining_stock += rgp.quantity
                         rgp.Item.save()
                         rgp.delete()
                     else:
                         rgp.Item.total_issued -= int(quantity)
-                        rgp.Item.total_stock += int(quantity)
+                        rgp.Item.remaining_stock += int(quantity)
                         rgp.Item.save()
                         rgp.quantity -= int(quantity)
                         rgp.save()
@@ -269,11 +321,11 @@ class EditItemsAPI(APIView):
         try:
             with transaction.atomic():
                 for item in request.POST.getlist("itemlist"):
-                    (total_stock, static_id) = item.split(",")
+                    (remaining_stock, static_id) = item.split(",")
                     item = Item.objects.get(static_id=static_id)
                     if not item:
                         raise ValueError("Invalid Item ID")
-                    item.total_stock = int(total_stock)
+                    item.remaining_stock = int(remaining_stock)
                     item.save()
             return Drf_Response({"message": "Items updated successfully"})
         except Exception as e:

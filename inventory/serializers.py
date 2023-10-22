@@ -5,15 +5,15 @@ from .models import Department, DepartmentMember, Item, ItemDepartmentMember
 
 
 class ItemSerializer(serializers.ModelSerializer):
-    total_stock = serializers.SerializerMethodField()
+    remaining_stock = serializers.SerializerMethodField()
 
     class Meta:
         model = Item
         fields = "__all__"
         read_only_fields = ("static_id",)
 
-    def get_total_stock(self, instance):
-        return instance.total_stock
+    def get_remaining_stock(self, instance):
+        return instance.remaining_stock
 
 
 class DepartmentMemberSerializer(serializers.ModelSerializer):
