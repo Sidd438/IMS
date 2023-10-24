@@ -133,7 +133,6 @@ class SUUser(models.Model):
     def __str__(self) -> str:
         return self.auth_user.username
 
-
 # class IssueLog(models.Model):
 #     item = models.ForeignKey(
 #         Item, related_name="request_logs", on_delete=models.PROTECT

@@ -39,7 +39,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'django_tables2',
-    'inventory'
+    'inventory',
+    'department'
 ]
 
 MIDDLEWARE = [

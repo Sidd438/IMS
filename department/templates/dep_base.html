@@ -1,0 +1,77 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en" style = "height: 100%;">
+
+<head>
+  <title>{% block title %} {% endblock %}</title>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+  <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+  {% include 'scripts.html' %}
+  {% block head %}
+  {% endblock%}
+</head>
+
+<body class = "overflow-hidden" style = "height: 100%;">
+  <div style="display: flex; width: 100%; height: 100%">
+  <div class="pcr-sidebar d-flex flex-column flex-shrink-0 p-3 text-white bg-dark"
+    style="width: auto; height: 100%;">
+    <a class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+      <span class="fs-4">Department Admin</span>
+    </a>
+    <hr>
+<ul class="nav nav-pills flex-column mb-auto">
+  <!-- <li style="width : 100%">
+    <a href="{% url 'Item-list'%}" {% if request.resolver_match.url_name == 'Item-list' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+      <strong style="font-size: 100%;">All Items</strong>
+  </a>
+</li>
+<hr> -->
+
+<!--
+<li style="width : 100%">
+  <a href="{% url 'departments-members'%}" {% if request.resolver_match.url_name == 'departmentmembers' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Alloted Members</strong>
+  </a>
+</li> -->
+<!-- <hr> -->
+    <!-- <li style="width : 100%">
+	 <a href="{% url 'department-list'%}" {% if request.resolver_match.url_name == 'department-list' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+	 <strong style="font-size: 100%;">All departments</strong>
+	 </a>
+	 </li> -->
+<!-- <hr>
+     <li style="width : 100%">
+    <a href="{% url 'department-list' %}" {% if request.resolver_match.url_name == 'create-departments' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+      <strong style="font-size: 100%;">Allocate Items</strong>
+  </a>
+</li> -->
+    <hr>
+
+<li style="width : 100%">
+  <a href="{% url 'dep-dashboard'%}" {% if request.resolver_match.url_name == 'Items' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+    <strong style="font-size: 100%;">Issued Items</strong>
+</a>
+</li>
+
+<hr>
+
+<!-- <li style="width : 100%">
+     <a href="{% url 'create-Item'%}" {% if request.resolver_match.url_name == 'create-inventory' %} class="nav-link active"{% endif %} class="nav-link text-white bg-dark " aria-current="page">
+     <strong style="font-size: 100%;">Add/Update Item</strong>
+     </a>
+     </li>
+     <hr> -->
+</ul>
+<hr>
+  </div>
+  <div style="width: 100%; height: 100%; padding: 5% 2.5%">
+      {% block content %}{% endblock %}
+  </div>
+  </div>
+</body>
+</html>
+
+{% block javascripts %}
+{% endblock javascripts %}
