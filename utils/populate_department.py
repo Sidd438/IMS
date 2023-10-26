@@ -18,11 +18,11 @@ df = pd.read_excel(excel_name)
 
 with transaction.atomic():
     for row_num, row in df.iterrows():
-        if pd.isna(row["Name"]):
+        if pd.isna(row["Clubs"]):
             print(f"Skipping row: {row_num}")
             continue
 
         dep, created = Department.objects.get_or_create(
-            name=row["Name"],
+            name=row["Clubs"],
         )
-        print(f"Added {row['Name']}")
+        print(f"Added {row['Clubs']}")
