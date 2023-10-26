@@ -18,16 +18,16 @@ df = pd.read_excel(excel_name)
 
 with transaction.atomic():
     for row_num, row in df.iterrows():
-        if pd.isna(row["Name"]) or pd.isna(row["Department"]):
+        if pd.isna(row["Coordinator"]) or pd.isna(row["Clubs"]):
             print(f"Skipping row {row_num}")
 
-        department = Department.objects.filter(name=row["Department"]).first()
+        department = Department.objects.filter(name=row["Clubs"]).first()
 
         if department is None:
-            raise Exception(f"Department {row['Department']} not found")
+            raise Exception(f"Department {row['Clubs']} not found")
 
         member, created = DepartmentMember.objects.get_or_create(
-            name=row["Name"],
+            name=row["Coordinator"],
             department = department
         )
-        print(f"Added {row['Name']}")
+        print(f"Added {row['Coordinator']}")
